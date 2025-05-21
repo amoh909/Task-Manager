@@ -15,7 +15,7 @@ function App() {
   }, []);
 
   const handleAdd = (e) => {
-    e.preventDefeault();
+    e.preventDefault();
     if (newTitle.trim() === "") return;
 
     fetch("http://127.0.0.1:8000/api/tasks/add/", {
