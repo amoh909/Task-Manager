@@ -4,6 +4,9 @@ function App() {
   const [tasks, setTasks] = useState([]);
   const [newTitle, setNewTitle] = useState("");
 
+  const [editingTaskId, setEditingTaskId] = useState(null);
+  const [editingTitle, setEditingTitle] = useState("");
+
   const fetchTasks = () => {
     fetch("http://127.0.0.1:8000/api/tasks/")
       .then((res) => res.json())
@@ -50,6 +53,21 @@ function App() {
       .then(() => fetchTasks());
   }
 
+  const updateTaskTitle = (id, newTitle) => {
+    fetch(`http://127.0.0.1:8000/api/update/${id}/`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ title: newTitle }),
+    })
+      .then((res) => res.json())
+      .then(() => {
+        setEditingTaskId(null);
+        fetchTasks(); // refresh the list
+      });
+  };
+
 
   return (
     <div style={{ padding: "2rem" }}>
@@ -71,16 +89,52 @@ function App() {
       <ul>
         {tasks.map((task) => (
           <li key={task.id}>
-            <span
-              onClick={() => toggleTask(task)}
-              style={{
-                cursor: "pointer",
-                textDecoration: task.completed ? "line-through" : "none",
-                marginRight: "10px",
-              }}
-            >
-              {task.title} {task.completed ? "✅" : "⏳"}
-            </span>
+            {editingTaskId === task.id ? (
+              <input
+                type="text"
+                value={editingTitle}
+                onChange={(e) => setEditingTitle(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    updateTaskTitle(task.id, editingTitle);
+                  }
+                }}
+                onBlur={() => setEditingTaskId(null)}
+                autoFocus
+                style={{ padding: "0.3rem", marginRight: "10px" }}
+              />
+            ) : (
+              <>
+                <span
+                  onClick={() => {
+                    setEditingTaskId(task.id);
+                    setEditingTitle(task.title);
+                  }}
+                  style={{
+                    cursor: "pointer",
+                    textDecoration: task.completed ? "line-through" : "none",
+                    marginRight: "10px",
+                  }}
+                >
+                  {task.title}
+                </span>
+                <button
+                  onClick={() => toggleTask(task)}
+                  style={{
+                    marginRight: "10px",
+                    background: task.completed ? "green" : "orange",
+                    color: "white",
+                    border: "none",
+                    padding: "2px 8px",
+                    cursor: "pointer",
+                    borderRadius: "5px",
+                  }}
+                >
+                  {task.completed ? "✅" : "⏳"}
+                </button>
+              </>
+            )}
+
             <button
               onClick={() => deleteTask(task.id)}
               style={{
@@ -92,7 +146,7 @@ function App() {
                 borderRadius: "5px",
               }}
             >
-              Delete Task
+              Delete
             </button>
           </li>
         ))}
